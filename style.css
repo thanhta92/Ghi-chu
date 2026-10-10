@@ -1401,7 +1401,7 @@ body.theme-light .note-card-footer {
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 200;
+  z-index: 1000;
   padding: 16px;
   animation: fadeIn 0.2s ease;
 }
@@ -3418,3 +3418,813 @@ body.theme-light .password-input-wrap .btn-eye:hover {
   color: var(--text-main);
 }
 
+/* ==========================================================================
+   MOBILE & IPHONE NATIVE USER INTERFACE SYSTEM
+   ========================================================================== */
+
+/* iOS Bottom Navigation Bar */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 950;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border-top: 1px solid var(--border-color);
+  padding: 6px 8px max(10px, env(safe-area-inset-bottom, 10px)) 8px;
+  box-shadow: 0 -8px 25px rgba(0, 0, 0, 0.35);
+  justify-content: space-around;
+  align-items: center;
+}
+
+body.theme-light .mobile-bottom-nav {
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex: 1;
+  max-width: 72px;
+  touch-action: manipulation;
+}
+
+.bottom-nav-item span {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+.bottom-nav-item .nav-icon-wrap {
+  font-size: 1.18rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+}
+
+.bottom-nav-item .nav-badge {
+  position: absolute;
+  top: -4px;
+  right: -9px;
+  background: var(--danger);
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 99px;
+  border: 1.5px solid var(--bg-primary);
+  min-width: 16px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.bottom-nav-item:active {
+  transform: scale(0.92);
+}
+
+.bottom-nav-item.active {
+  color: var(--primary);
+}
+
+.bottom-nav-item.active .nav-icon-wrap {
+  filter: drop-shadow(0 0 8px var(--primary-glow));
+}
+
+/* Center Elevated FAB */
+.bottom-nav-fab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  margin-top: -24px;
+  padding: 0 4px;
+  touch-action: manipulation;
+}
+
+.bottom-nav-fab .fab-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), #a855f7);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  box-shadow: 0 8px 22px var(--primary-glow), 0 3px 8px rgba(0, 0, 0, 0.3);
+  border: 3.5px solid var(--bg-primary);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+body.theme-light .bottom-nav-fab .fab-circle {
+  border-color: #f1f5f9;
+}
+
+.bottom-nav-fab .fab-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-top: 2px;
+}
+
+.bottom-nav-fab:active .fab-circle {
+  transform: scale(0.88);
+}
+
+/* Mobile Day Agenda Card (Below Calendar) */
+.mobile-day-agenda {
+  margin-top: 14px;
+  padding: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  animation: fadeIn 0.25s ease;
+}
+
+.agenda-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.agenda-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.agenda-title-wrap i {
+  font-size: 1.25rem;
+}
+
+.agenda-title-wrap strong {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.agenda-lunar {
+  font-size: 0.72rem;
+  color: var(--accent-gold);
+  display: block;
+  font-weight: 500;
+}
+
+.btn-agenda-add {
+  padding: 5px 12px;
+  font-size: 0.76rem;
+  border-radius: var(--radius-full);
+}
+
+.agenda-notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.agenda-item-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--primary);
+  border-radius: var(--radius-md);
+  gap: 10px;
+  transition: var(--transition);
+}
+
+body.theme-light .agenda-item-card {
+  background: rgba(241, 245, 249, 0.7);
+}
+
+.agenda-item-card:hover {
+  background: var(--bg-card-hover);
+}
+
+.agenda-item-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.agenda-time-pill {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(56, 189, 248, 0.12);
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+.agenda-content-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-main);
+}
+
+.agenda-actions-mini {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.agenda-actions-mini .btn-icon-xs {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.agenda-actions-mini .btn-icon-xs:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.agenda-empty-state {
+  text-align: center;
+  padding: 16px 10px;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.agenda-empty-state i {
+  font-size: 1.6rem;
+  color: var(--text-faint);
+  margin-bottom: 6px;
+  display: block;
+}
+
+/* Mobile Action Sheet / Settings Modal */
+.modal-action-sheet {
+  max-width: 460px;
+  border-radius: 24px 24px 0 0;
+  margin: 0 auto;
+}
+
+.action-sheet-handle {
+  width: 40px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 99px;
+  margin: 10px auto 4px auto;
+}
+
+body.theme-light .action-sheet-handle {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.action-sheet-header {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.user-sheet-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar-lg {
+  width: 42px;
+  height: 42px;
+  font-size: 1.1rem;
+}
+
+.sheet-user-info strong {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.action-sheet-body {
+  padding: 14px 18px;
+}
+
+.action-sheet-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sheet-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  touch-action: manipulation;
+}
+
+.sheet-menu-item:hover, .sheet-menu-item:active {
+  background: var(--bg-card-hover);
+  border-color: var(--border-glow);
+  transform: translateX(2px);
+}
+
+.sheet-item-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sheet-item-left i {
+  font-size: 1.1rem;
+  width: 20px;
+  text-align: center;
+}
+
+.sheet-item-tag {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+}
+
+.sheet-menu-item.item-danger {
+  color: var(--danger);
+}
+
+.sheet-menu-item.item-danger:hover, .sheet-menu-item.item-danger:active {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.action-sheet-footer {
+  padding: 12px 18px max(16px, env(safe-area-inset-bottom, 16px)) 18px;
+  border-top: 1px solid var(--border-color);
+}
+
+.w-100 {
+  width: 100%;
+}
+
+/* ==========================================================================
+   RESPONSIVE MEDIA QUERIES (TABLET & MOBILE)
+   ========================================================================== */
+
+@media (max-width: 992px) {
+  .main-content {
+    grid-template-columns: 1fr 400px;
+    gap: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Prevent horizontal scrolling on mobile */
+  html, body {
+    overflow-x: hidden;
+    position: relative;
+    width: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    padding-bottom: calc(75px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .app-container {
+    padding: 6px 8px 16px 8px;
+    max-width: 100%;
+  }
+
+  /* Compact Native-Feel Mobile Header */
+  .app-header {
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    gap: 8px;
+    position: sticky;
+    top: max(4px, env(safe-area-inset-top, 4px));
+    border-radius: var(--radius-md);
+  }
+
+  .header-left .logo {
+    gap: 8px;
+  }
+
+  .logo-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 1.05rem;
+    border-radius: 8px;
+  }
+
+  .logo-text h1 {
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+
+  .logo-text .subtitle {
+    display: none;
+  }
+
+  .pwa-badge {
+    font-size: 0.6rem;
+    padding: 1px 4px;
+  }
+
+  .header-center {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .current-clock {
+    padding: 4px 10px;
+    gap: 6px;
+  }
+
+  .current-clock .time {
+    font-size: 0.85rem;
+  }
+
+  .current-clock .date {
+    display: none;
+  }
+
+  /* Hide Desktop redundant buttons from header (Moved to Bottom Nav & Action Sheet) */
+  .btn-install-pwa,
+  .btn-wake,
+  #btnEnableNotification,
+  .admin-btn {
+    display: none !important;
+  }
+
+  .user-profile-btn {
+    padding: 3px 8px 3px 4px;
+  }
+
+  .user-profile-btn .username {
+    display: none;
+  }
+
+  .user-profile-btn i {
+    display: none;
+  }
+
+  .sync-badge {
+    padding: 3px 8px;
+    font-size: 0.7rem;
+  }
+
+  .sync-badge .status-text {
+    display: none;
+  }
+
+  /* Top Segmented Mobile Tabs */
+  .mobile-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    margin-bottom: 10px;
+    background: rgba(15, 23, 42, 0.7);
+    padding: 3px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border-color);
+  }
+
+  body.theme-light .mobile-tabs {
+    background: rgba(226, 232, 240, 0.7);
+  }
+
+  .tab-btn {
+    padding: 8px 12px;
+    border-radius: var(--radius-full);
+    font-size: 0.82rem;
+    font-weight: 700;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+  }
+
+  .tab-btn.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 4px 12px var(--primary-glow);
+  }
+
+  /* Main Workspace Mobile Layout */
+  .main-content {
+    display: block;
+  }
+
+  .left-panel,
+  .right-panel {
+    display: none;
+    width: 100%;
+    padding: 12px;
+    border-radius: var(--radius-lg);
+  }
+
+  .left-panel.active-tab,
+  .right-panel.active-tab {
+    display: flex;
+    animation: fadeIn 0.25s ease;
+  }
+
+  /* Calendar Controls on Mobile */
+  .calendar-controls {
+    margin-bottom: 10px;
+  }
+
+  .month-display .month-text {
+    font-size: 1.15rem;
+  }
+
+  .month-display .year-text {
+    font-size: 0.75rem;
+  }
+
+  .calendar-weekdays {
+    gap: 3px;
+    margin-bottom: 4px;
+  }
+
+  .weekday {
+    font-size: 0.72rem;
+    padding: 4px 2px;
+  }
+
+  .calendar-grid {
+    gap: 3px;
+  }
+
+  .calendar-cell {
+    min-height: 52px;
+    padding: 3px;
+    border-radius: 8px;
+  }
+
+  .solar-day {
+    font-size: 0.82rem;
+  }
+
+  .lunar-day {
+    font-size: 0.58rem;
+  }
+
+  /* On mobile calendar: Hide bulky text preview, show event dots with speaker icon! */
+  .cell-events {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    justify-content: center;
+    margin-top: 2px;
+  }
+
+  .cell-note-item {
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    line-height: 1.1;
+  }
+
+  .cell-note-item .note-time-badge {
+    display: none;
+  }
+
+  .cell-note-item .note-text-snippet {
+    display: none;
+  }
+
+  .cell-note-item .note-speaker-icon {
+    font-size: 0.65rem;
+    margin-right: 0;
+  }
+
+  /* Mobile Event Indicator Dot */
+  .cell-note-item::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--primary);
+  }
+
+  .cell-note-item.category-work::before { background-color: #38bdf8; }
+  .cell-note-item.category-personal::before { background-color: #a855f7; }
+  .cell-note-item.category-family::before { background-color: #f43f5e; }
+  .cell-note-item.category-health::before { background-color: #10b981; }
+  .cell-note-item.category-financial::before { background-color: #fbbf24; }
+
+  /* Right Panel: Notes List on Mobile */
+  .panel-header {
+    margin-bottom: 10px;
+  }
+
+  .panel-title h2 {
+    font-size: 1.15rem;
+  }
+
+  .filter-pills {
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 4px;
+    gap: 6px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .filter-pills::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pill {
+    padding: 5px 12px;
+    font-size: 0.78rem;
+    flex-shrink: 0;
+  }
+
+  .month-pills-grid {
+    overflow-x: auto;
+    display: flex;
+    gap: 4px;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .month-pills-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .month-pill-btn {
+    padding: 4px 10px;
+    font-size: 0.74rem;
+    flex-shrink: 0;
+  }
+
+  .notes-list {
+    max-height: calc(100vh - 280px);
+    padding-right: 0;
+  }
+
+  .note-item {
+    padding: 12px;
+    border-radius: var(--radius-md);
+    margin-bottom: 10px;
+  }
+
+  .note-content-preview {
+    font-size: 0.85rem;
+    max-height: 4.2em;
+  }
+
+  /* Modals as iOS Bottom Sheets */
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .modal-dialog {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 24px 24px 0 0;
+    max-height: 90vh;
+    animation: slideUpSheet 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+  }
+
+  @keyframes slideUpSheet {
+    from {
+      transform: translateY(100%);
+      opacity: 0.6;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .modal-dialog::before {
+    content: '';
+    display: block;
+    width: 38px;
+    height: 4.5px;
+    background: rgba(255, 255, 255, 0.35);
+    border-radius: 99px;
+    margin: 8px auto 2px auto;
+  }
+
+  body.theme-light .modal-dialog::before {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .modal-header {
+    padding: 12px 18px;
+  }
+
+  .modal-header h3 {
+    font-size: 1.05rem;
+  }
+
+  .modal-body {
+    padding: 14px 18px;
+    max-height: calc(85vh - 120px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modal-footer {
+    padding: 10px 18px max(14px, env(safe-area-inset-bottom, 14px)) 18px;
+  }
+
+  /* Inputs iOS Optimization: Prevent Auto-zoom (Font >= 16px) */
+  input[type="text"],
+  input[type="date"],
+  input[type="password"],
+  select,
+  textarea {
+    font-size: 16px !important;
+    touch-action: manipulation;
+  }
+
+  .form-row-2col {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .form-control-sm,
+  .form-control {
+    min-height: 42px;
+  }
+
+  .time-box-input-sm {
+    width: 48px;
+    height: 42px;
+    font-size: 1.15rem;
+  }
+
+  /* Show Bottom Navigation Bar */
+  .mobile-bottom-nav {
+    display: flex;
+  }
+
+  /* Hide old fixed FAB */
+  .fab-btn {
+    display: none !important;
+  }
+}
+
+@media (max-width: 400px) {
+  .logo-text h1 {
+    font-size: 0.98rem;
+  }
+
+  .bottom-nav-item span {
+    font-size: 0.62rem;
+  }
+
+  .bottom-nav-fab .fab-circle {
+    width: 48px;
+    height: 48px;
+    font-size: 1.25rem;
+  }
+}

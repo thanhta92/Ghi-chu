@@ -170,6 +170,25 @@
         <div class="calendar-grid" id="calendarGrid">
           <!-- Populated dynamically by app.js -->
         </div>
+
+        <!-- Mobile Daily Agenda Card (Expands when date selected) -->
+        <div class="mobile-day-agenda" id="mobileDayAgenda">
+          <div class="agenda-header">
+            <div class="agenda-title-wrap">
+              <i class="fa-regular fa-calendar-check text-primary"></i>
+              <div>
+                <strong id="agendaDateTitle">Lịch hẹn trong ngày</strong>
+                <span class="agenda-lunar" id="agendaDateLunar">Âm lịch: --/--</span>
+              </div>
+            </div>
+            <button type="button" class="btn-primary-sm btn-agenda-add" id="btnAgendaAddNote">
+              <i class="fa-solid fa-plus"></i> Thêm hẹn
+            </button>
+          </div>
+          <div class="agenda-notes-list" id="agendaNotesList">
+            <!-- Populated by JS when selecting date -->
+          </div>
+        </div>
       </section>
 
 
@@ -871,6 +890,128 @@
       </div>
     </div>
   </div>
+
+  <!-- 9. Mobile Action Sheet / Settings Menu -->
+  <div class="modal-overlay" id="mobileActionSheetModal">
+    <div class="modal-dialog modal-action-sheet">
+      <div class="action-sheet-handle"></div>
+      <div class="modal-header action-sheet-header">
+        <div class="user-sheet-profile" id="sheetUserProfile">
+          <div class="avatar avatar-lg" id="sheetUserAvatar">U</div>
+          <div class="sheet-user-info">
+            <strong id="sheetUserName">Người dùng</strong>
+            <small id="sheetUserRole" class="text-accent">Thành viên</small>
+          </div>
+        </div>
+        <button class="btn-close" id="btnCloseActionSheet"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-body action-sheet-body">
+        <div class="action-sheet-group">
+          <!-- Theme Toggle -->
+          <button class="sheet-menu-item" id="sheetBtnTheme">
+            <div class="sheet-item-left">
+              <i class="fa-solid fa-circle-half-stroke text-primary"></i>
+              <span>Giao diện (Sáng / Tối)</span>
+            </div>
+            <span class="sheet-item-tag" id="sheetThemeStatus">Tối</span>
+          </button>
+
+          <!-- Custom Sounds -->
+          <button class="sheet-menu-item" id="sheetBtnSounds">
+            <div class="sheet-item-left">
+              <i class="fa-solid fa-music text-accent"></i>
+              <span>Kho âm thanh báo thức</span>
+            </div>
+            <i class="fa-solid fa-chevron-right text-muted"></i>
+          </button>
+
+          <!-- Web Push / APNs -->
+          <button class="sheet-menu-item" id="sheetBtnPush">
+            <div class="sheet-item-left">
+              <i class="fa-solid fa-tower-broadcast text-accent-gold"></i>
+              <span>Đẩy Báo Thức iPhone (APNs)</span>
+            </div>
+            <i class="fa-solid fa-chevron-right text-muted"></i>
+          </button>
+
+          <!-- Wake Lock -->
+          <button class="sheet-menu-item" id="sheetBtnWakeLock">
+            <div class="sheet-item-left">
+              <i class="fa-solid fa-bolt text-warning"></i>
+              <span>Giữ sáng màn hình</span>
+            </div>
+            <span class="sheet-item-tag" id="sheetWakeLockStatus">Tắt</span>
+          </button>
+
+          <!-- Install App -->
+          <button class="sheet-menu-item" id="sheetBtnInstallPwa">
+            <div class="sheet-item-left">
+              <i class="fa-solid fa-cloud-arrow-down text-accent-green"></i>
+              <span>Cài đặt App vào màn hình</span>
+            </div>
+            <i class="fa-solid fa-chevron-right text-muted"></i>
+          </button>
+
+          <!-- Admin Panel -->
+          <button class="sheet-menu-item" id="sheetBtnAdmin" style="display: none;">
+            <div class="sheet-item-left">
+              <i class="fa-solid fa-shield-halved text-warning"></i>
+              <span>Quản trị người dùng</span>
+            </div>
+            <span class="pending-count-badge" id="sheetPendingBadge" style="display:none;">0</span>
+          </button>
+
+          <!-- Auth Action: Login or Logout -->
+          <button class="sheet-menu-item item-danger" id="sheetBtnAuth">
+            <div class="sheet-item-left">
+              <i class="fa-solid fa-arrow-right-from-bracket" id="sheetAuthIcon"></i>
+              <span id="sheetAuthText">Đăng xuất</span>
+            </div>
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-footer action-sheet-footer">
+        <button class="btn-secondary w-100" id="btnCloseActionSheet2">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- iOS Mobile Bottom Navigation Bar -->
+  <nav class="mobile-bottom-nav" id="mobileBottomNav">
+    <button class="bottom-nav-item active" data-tab="calendarView" id="navBtnCalendar">
+      <div class="nav-icon-wrap"><i class="fa-solid fa-calendar-days"></i></div>
+      <span>Lịch</span>
+    </button>
+    
+    <button class="bottom-nav-item" data-tab="listView" id="navBtnList">
+      <div class="nav-icon-wrap">
+        <i class="fa-solid fa-list-check"></i>
+        <span class="nav-badge" id="bottomNavNotesCount">0</span>
+      </div>
+      <span>Lịch Hẹn</span>
+    </button>
+    
+    <!-- Floating Center Add Button -->
+    <button class="bottom-nav-fab" id="bottomNavFab" title="Thêm Lịch Hẹn Mới">
+      <div class="fab-circle">
+        <i class="fa-solid fa-plus"></i>
+      </div>
+      <span class="fab-label">Thêm</span>
+    </button>
+    
+    <button class="bottom-nav-item" id="navBtnPush" title="Báo thức đám mây iPhone">
+      <div class="nav-icon-wrap"><i class="fa-solid fa-tower-broadcast"></i></div>
+      <span>Báo Thức</span>
+    </button>
+    
+    <button class="bottom-nav-item" id="navBtnMenu" title="Menu & Cài đặt">
+      <div class="nav-icon-wrap"><i class="fa-solid fa-sliders"></i></div>
+      <span>Cài Đặt</span>
+    </button>
+  </nav>
 
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toastContainer"></div>

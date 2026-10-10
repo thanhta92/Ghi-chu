@@ -768,6 +768,7 @@ class NotesApp {
     this.checkUrlParamsOnStartup();
     this.loadCustomRingtones();
     this.initWebPush();
+    this.switchMobileTab('calendarView');
     this.renderAll();
   }
 
@@ -805,6 +806,42 @@ class NotesApp {
     this.listView = document.getElementById('listView');
     this.mobileNotesCount = document.getElementById('mobileNotesCount');
     this.fabAddNote = document.getElementById('fabAddNote');
+
+    // Mobile Bottom Navigation Bar & Action Sheet
+    this.mobileBottomNav = document.getElementById('mobileBottomNav');
+    this.navBtnCalendar = document.getElementById('navBtnCalendar');
+    this.navBtnList = document.getElementById('navBtnList');
+    this.bottomNavFab = document.getElementById('bottomNavFab');
+    this.navBtnPush = document.getElementById('navBtnPush');
+    this.navBtnMenu = document.getElementById('navBtnMenu');
+    this.bottomNavNotesCount = document.getElementById('bottomNavNotesCount');
+
+    // Mobile Day Agenda Card
+    this.mobileDayAgenda = document.getElementById('mobileDayAgenda');
+    this.agendaDateTitle = document.getElementById('agendaDateTitle');
+    this.agendaDateLunar = document.getElementById('agendaDateLunar');
+    this.agendaNotesList = document.getElementById('agendaNotesList');
+    this.btnAgendaAddNote = document.getElementById('btnAgendaAddNote');
+
+    // Mobile Action Sheet
+    this.mobileActionSheetModal = document.getElementById('mobileActionSheetModal');
+    this.btnCloseActionSheet = document.getElementById('btnCloseActionSheet');
+    this.btnCloseActionSheet2 = document.getElementById('btnCloseActionSheet2');
+    this.sheetUserAvatar = document.getElementById('sheetUserAvatar');
+    this.sheetUserName = document.getElementById('sheetUserName');
+    this.sheetUserRole = document.getElementById('sheetUserRole');
+    this.sheetBtnTheme = document.getElementById('sheetBtnTheme');
+    this.sheetThemeStatus = document.getElementById('sheetThemeStatus');
+    this.sheetBtnSounds = document.getElementById('sheetBtnSounds');
+    this.sheetBtnPush = document.getElementById('sheetBtnPush');
+    this.sheetBtnWakeLock = document.getElementById('sheetBtnWakeLock');
+    this.sheetWakeLockStatus = document.getElementById('sheetWakeLockStatus');
+    this.sheetBtnInstallPwa = document.getElementById('sheetBtnInstallPwa');
+    this.sheetBtnAdmin = document.getElementById('sheetBtnAdmin');
+    this.sheetPendingBadge = document.getElementById('sheetPendingBadge');
+    this.sheetBtnAuth = document.getElementById('sheetBtnAuth');
+    this.sheetAuthIcon = document.getElementById('sheetAuthIcon');
+    this.sheetAuthText = document.getElementById('sheetAuthText');
 
     // Calendar
     this.btnPrevMonth = document.getElementById('btnPrevMonth');
@@ -1004,20 +1041,83 @@ class NotesApp {
       this.checkPushStatus();
     });
 
-    // Mobile Tabs Navigation
+    // Mobile Navigation & Tab Switching
     this.mobileTabs?.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        this.mobileTabs.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const tabTarget = btn.dataset.tab;
-        if (tabTarget === 'calendarView') {
-          this.calendarView.classList.add('active-tab');
-          this.listView.classList.remove('active-tab');
-        } else {
-          this.listView.classList.add('active-tab');
-          this.calendarView.classList.remove('active-tab');
-        }
+        this.switchMobileTab(btn.dataset.tab);
       });
+    });
+
+    this.navBtnCalendar?.addEventListener('click', () => {
+      this.switchMobileTab('calendarView');
+    });
+
+    this.navBtnList?.addEventListener('click', () => {
+      this.switchMobileTab('listView');
+    });
+
+    this.bottomNavFab?.addEventListener('click', () => {
+      this.openNoteModal(null, this.selectedDate);
+    });
+
+    this.navBtnPush?.addEventListener('click', () => {
+      this.openWebPushModal();
+    });
+
+    this.navBtnMenu?.addEventListener('click', () => {
+      this.openActionSheet();
+    });
+
+    // Mobile Action Sheet Controls
+    this.btnCloseActionSheet?.addEventListener('click', () => {
+      this.mobileActionSheetModal?.classList.remove('show');
+    });
+    this.btnCloseActionSheet2?.addEventListener('click', () => {
+      this.mobileActionSheetModal?.classList.remove('show');
+    });
+
+    this.sheetBtnTheme?.addEventListener('click', () => {
+      this.btnThemeToggle?.click();
+      this.updateActionSheetUI();
+    });
+
+    this.sheetBtnSounds?.addEventListener('click', () => {
+      this.mobileActionSheetModal?.classList.remove('show');
+      this.openCustomSoundModal();
+    });
+
+    this.sheetBtnPush?.addEventListener('click', () => {
+      this.mobileActionSheetModal?.classList.remove('show');
+      this.openWebPushModal();
+    });
+
+    this.sheetBtnWakeLock?.addEventListener('click', () => {
+      this.btnWakeLock?.click();
+      this.updateActionSheetUI();
+    });
+
+    this.sheetBtnInstallPwa?.addEventListener('click', () => {
+      this.mobileActionSheetModal?.classList.remove('show');
+      this.btnInstallPwa?.click();
+    });
+
+    this.sheetBtnAdmin?.addEventListener('click', () => {
+      this.mobileActionSheetModal?.classList.remove('show');
+      this.openAdminModal();
+    });
+
+    this.sheetBtnAuth?.addEventListener('click', () => {
+      this.mobileActionSheetModal?.classList.remove('show');
+      if (this.state.currentUser) {
+        this.btnLogout?.click();
+      } else {
+        this.openAuthModal();
+      }
+    });
+
+    // Mobile Day Agenda Add Button
+    this.btnAgendaAddNote?.addEventListener('click', () => {
+      this.openNoteModal(null, this.selectedDate);
     });
 
     // Calendar Navigation
@@ -1760,11 +1860,15 @@ class NotesApp {
       const lunar = LunarCalendar.convert(day, nextDate.getMonth() + 1, nextDate.getFullYear());
       this.calendarGrid.appendChild(this.createCalendarCell(day, nextDateStr, lunar, true));
     }
+
+    // Render mobile agenda for the selected date
+    this.renderMobileDaySchedule(this.selectedDate || todayStr);
   }
 
   createCalendarCell(dayNumber, dateIso, lunar, isOtherMonth = false, isToday = false, isSelected = false, isSaturday = false, isSunday = false) {
     const cell = document.createElement('div');
     cell.className = 'calendar-cell';
+    cell.dataset.date = dateIso;
     if (isOtherMonth) cell.classList.add('other-month');
     if (isToday) cell.classList.add('today');
     if (isSelected) cell.classList.add('selected');
@@ -1834,18 +1938,163 @@ class NotesApp {
 
     cell.appendChild(eventsContainer);
 
-    // Clicking on cell opens add note modal for this date
+    // Clicking on cell updates selected date & refreshes mobile agenda
     cell.addEventListener('click', () => {
       this.selectedDate = dateIso;
       this.documentSelectCell(dateIso);
-      this.openNoteModal(null, dateIso);
+      cell.classList.add('selected');
+      this.renderMobileDaySchedule(dateIso);
+
+      // On desktop screen (> 768px), opening modal directly
+      if (window.innerWidth > 768) {
+        this.openNoteModal(null, dateIso);
+      }
     });
 
     return cell;
   }
 
   documentSelectCell(dateIso) {
-    document.querySelectorAll('.calendar-cell').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('.calendar-cell').forEach(c => {
+      c.classList.toggle('selected', c.dataset.date === dateIso);
+    });
+  }
+
+  /* ====================================================================
+     MOBILE & IPHONE NATIVE EXPERIENCE ENGINE
+     ==================================================================== */
+  switchMobileTab(targetTab) {
+    // 1. Update Top Segmented Tabs
+    this.mobileTabs?.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === targetTab);
+    });
+
+    // 2. Update Bottom Nav Bar Items
+    this.mobileBottomNav?.querySelectorAll('.bottom-nav-item').forEach(item => {
+      if (item.dataset.tab) {
+        item.classList.toggle('active', item.dataset.tab === targetTab);
+      }
+    });
+
+    // 3. Switch Panel Visibility
+    if (targetTab === 'calendarView') {
+      this.calendarView?.classList.add('active-tab');
+      this.listView?.classList.remove('active-tab');
+    } else {
+      this.listView?.classList.add('active-tab');
+      this.calendarView?.classList.remove('active-tab');
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  renderMobileDaySchedule(dateIso) {
+    if (!this.mobileDayAgenda || !this.agendaNotesList) return;
+
+    const [y, m, d] = dateIso.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    const daysOfWeek = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+    const dayLabel = daysOfWeek[dateObj.getDay()];
+    const lunar = LunarCalendar.convert(d, m, y);
+
+    this.agendaDateTitle.textContent = `${dayLabel}, ${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
+    this.agendaDateLunar.textContent = `Âm lịch: ${LunarCalendar.format(lunar)}`;
+
+    const dayNotes = this.state.notes.filter(n => n.date === dateIso);
+    dayNotes.sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
+
+    this.agendaNotesList.innerHTML = '';
+
+    if (dayNotes.length === 0) {
+      this.agendaNotesList.innerHTML = `
+        <div class="agenda-empty-state">
+          <i class="fa-regular fa-calendar-check"></i>
+          <p>Không có lịch hẹn nào trong ngày này</p>
+        </div>
+      `;
+      return;
+    }
+
+    dayNotes.forEach(note => {
+      const card = document.createElement('div');
+      card.className = `agenda-item-card cat-${note.category || 'work'}`;
+      card.innerHTML = `
+        <div class="agenda-item-left">
+          <span class="agenda-time-pill">
+            <i class="fa-regular fa-clock"></i> ${note.time || '--:--'}
+          </span>
+          <div class="agenda-content-text">
+            ${note.hasAlarm ? '<i class="fa-solid fa-bell text-warning" title="Có báo thức" style="margin-right:4px;"></i>' : ''}
+            ${note.content ? this.escapeHtml(note.content) : '<span class="text-muted" style="font-style: italic;">' + this.getCategoryName(note.category) + '</span>'}
+          </div>
+        </div>
+        <div class="agenda-actions-mini">
+          <button type="button" class="btn-icon-xs btn-agenda-view" title="Xem chi tiết"><i class="fa-solid fa-eye"></i></button>
+          <button type="button" class="btn-icon-xs btn-agenda-edit" title="Chỉnh sửa"><i class="fa-solid fa-pen-to-square"></i></button>
+          <button type="button" class="btn-icon-xs btn-agenda-del text-danger" title="Xóa"><i class="fa-solid fa-trash-can"></i></button>
+        </div>
+      `;
+
+      card.querySelector('.btn-agenda-view')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.openDetailModal(note.id);
+      });
+
+      card.querySelector('.btn-agenda-edit')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.openNoteModal(note.id);
+      });
+
+      card.querySelector('.btn-agenda-del')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (confirm('Bạn có chắc chắn muốn xóa lịch hẹn này?')) {
+          this.state.deleteNote(note.id);
+          this.showToast('Đã xóa lịch hẹn', 'info');
+          this.renderAll();
+        }
+      });
+
+      card.addEventListener('click', () => {
+        this.openDetailModal(note.id);
+      });
+
+      this.agendaNotesList.appendChild(card);
+    });
+  }
+
+  openActionSheet() {
+    this.updateActionSheetUI();
+    this.mobileActionSheetModal?.classList.add('show');
+  }
+
+  updateActionSheetUI() {
+    const user = this.state.currentUser;
+    if (user) {
+      this.sheetUserAvatar.textContent = (user.fullName || user.username).charAt(0).toUpperCase();
+      this.sheetUserName.textContent = user.fullName || user.username;
+      this.sheetUserRole.textContent = user.role === 'admin' ? 'Quản trị viên (Admin)' : 'Thành viên';
+      this.sheetBtnAdmin.style.display = user.role === 'admin' ? 'flex' : 'none';
+      this.sheetAuthIcon.className = 'fa-solid fa-arrow-right-from-bracket';
+      this.sheetAuthText.textContent = 'Đăng xuất tài khoản';
+      this.sheetBtnAuth.classList.add('item-danger');
+    } else {
+      this.sheetUserAvatar.textContent = 'K';
+      this.sheetUserName.textContent = 'Khách (Chưa đăng nhập)';
+      this.sheetUserRole.textContent = 'Dùng ngoại tuyến';
+      this.sheetBtnAdmin.style.display = 'none';
+      this.sheetAuthIcon.className = 'fa-solid fa-right-to-bracket';
+      this.sheetAuthText.textContent = 'Đăng nhập / Đăng ký';
+      this.sheetBtnAuth.classList.remove('item-danger');
+    }
+
+    const isLight = document.body.classList.contains('theme-light');
+    if (this.sheetThemeStatus) {
+      this.sheetThemeStatus.textContent = isLight ? 'Sáng' : 'Tối';
+    }
+
+    if (this.sheetWakeLockStatus) {
+      this.sheetWakeLockStatus.textContent = this.wakeLock ? 'Đang bật' : 'Tắt';
+    }
   }
 
   renderMonthFilterPills() {
@@ -1937,6 +2186,8 @@ class NotesApp {
     });
 
     this.notesTotalCount.textContent = `${filtered.length} lịch hẹn`;
+    if (this.mobileNotesCount) this.mobileNotesCount.textContent = filtered.length;
+    if (this.bottomNavNotesCount) this.bottomNavNotesCount.textContent = filtered.length;
     this.notesListContainer.innerHTML = '';
 
     if (filtered.length === 0) {
