@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>NOTES - Ứng Dụng Lịch Làm Việc & Báo Thức PWA</title>
+  <meta name="description" content="Ứng dụng Progressive Web App (PWA) quản lý lịch làm việc, âm lịch Việt Nam và báo thức thông minh đa thiết bị chạy nền.">
+  
+  <!-- PWA Manifest & Meta Tags -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#6366f1">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="NOTES">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-dark">
+  <!-- Audio Alarm Container -->
+  <div id="alarmAudioContainer" style="display: none;"></div>
+
+  <!-- App Wrapper -->
+  <div id="app" class="app-container">
+    
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo">
+          <div class="logo-icon">
+            <i class="fa-solid fa-calendar-check"></i>
+          </div>
+          <div class="logo-text">
+            <h1>NOTES <span class="pwa-badge">PWA</span></h1>
+            <span class="subtitle">Lịch Làm Việc & Báo Thức</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <div class="current-clock" id="liveClock">
+          <span class="time" id="clockTime">00:00:00</span>
+          <span class="date" id="clockDate">Thứ ..., 00/00/0000</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- PWA Install Button (Appears on mobile/desktop browsers) -->
+        <button id="btnInstallPwa" class="btn-install-pwa" title="Cài đặt App vào màn hình chính" style="display: none;">
+          <i class="fa-solid fa-cloud-arrow-down"></i> <span>Cài Đặt App</span>
+        </button>
+
+        <!-- Wake Lock Toggle Button -->
+        <button id="btnWakeLock" class="btn-icon btn-wake" title="Bật chế độ đánh thức màn hình liên tục">
+          <i class="fa-solid fa-bolt"></i>
+        </button>
+
+        <!-- Realtime Status Indicator -->
+        <div class="sync-badge online" id="syncStatus" title="Đang đồng bộ dữ liệu">
+          <span class="status-dot"></span>
+          <span class="status-text">Đồng bộ</span>
+        </div>
+
+        <!-- Notification Permission Button -->
+        <button id="btnEnableNotification" class="btn-icon" title="Bật thông báo đẩy thiết bị" style="display: none;">
+          <i class="fa-regular fa-bell"></i>
+        </button>
+
+        <!-- Admin Badge / Button (Only visible for admin) -->
+        <button id="btnAdminPanel" class="btn-primary-sm admin-btn" style="display: none;" title="Bảng quản trị người dùng">
+          <i class="fa-solid fa-shield-halved"></i> Quản trị
+          <span class="pending-count-badge" id="pendingUsersBadge" style="display:none;">0</span>
+        </button>
+
+        <!-- User Profile Dropdown -->
+        <div class="user-menu" id="userMenuWrapper" style="display: none;">
+          <button class="user-profile-btn" id="btnUserMenuToggle">
+            <div class="avatar" id="userAvatar">U</div>
+            <span class="username" id="displayUsername">User</span>
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          
+          <div class="user-dropdown-menu" id="userDropdown">
+            <div class="user-info-card">
+              <strong id="dropdownFullName">Người dùng</strong>
+              <small id="dropdownRole">Thành viên</small>
+            </div>
+            <hr>
+            <button id="btnWebPushConfig" class="dropdown-item">
+              <i class="fa-solid fa-tower-broadcast text-accent"></i> Đẩy Báo Thức iPhone (APNs)
+            </button>
+            <button id="btnHeaderCustomSounds" class="dropdown-item">
+              <i class="fa-solid fa-music"></i> Kho âm thanh báo thức
+            </button>
+            <button id="btnThemeToggle" class="dropdown-item">
+              <i class="fa-solid fa-circle-half-stroke"></i> Đổi giao diện
+            </button>
+            <button id="btnLogout" class="dropdown-item text-danger">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+            </button>
+          </div>
+        </div>
+
+        <!-- Login Trigger for Guest -->
+        <button id="btnOpenLoginModal" class="btn-primary-sm" style="display: inline-flex;">
+          <i class="fa-solid fa-right-to-bracket"></i> Đăng nhập
+        </button>
+      </div>
+    </header>
+
+    <!-- Mobile View Switcher (Tabs) -->
+    <nav class="mobile-tabs" id="mobileTabs">
+      <button class="tab-btn active" data-tab="calendarView">
+        <i class="fa-solid fa-calendar-days"></i>
+        <span>Lịch Tháng</span>
+      </button>
+      <button class="tab-btn" data-tab="listView">
+        <i class="fa-solid fa-list-check"></i>
+        <span>Danh Sách Hẹn</span>
+        <span class="tab-badge" id="mobileNotesCount">0</span>
+      </button>
+    </nav>
+
+    <!-- Main Workspace -->
+    <main class="main-content">
+      
+      <!-- LEFT SECTION: CALENDAR -->
+      <section class="panel left-panel" id="calendarView">
+        <!-- Calendar Header Navigation -->
+        <div class="calendar-controls">
+          <div class="month-nav">
+            <button id="btnPrevMonth" class="btn-icon" title="Tháng trước">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <div class="month-display" id="currentMonthYear">
+              <span class="month-text">Tháng --</span>
+              <span class="year-text">----</span>
+            </div>
+            <button id="btnNextMonth" class="btn-icon" title="Tháng sau">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <div class="calendar-actions">
+            <label class="custom-checkbox lunar-toggle-checkbox">
+              <input type="checkbox" id="toggleLunarDisplay">
+              <span class="checkmark"></span>
+              <span class="checkbox-label"><i class="fa-solid fa-moon text-accent-gold"></i> Âm lịch</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Weekday Labels (Thứ 2 -> Chủ nhật) -->
+        <div class="calendar-weekdays">
+          <div class="weekday">Thứ 2</div>
+          <div class="weekday">Thứ 3</div>
+          <div class="weekday">Thứ 4</div>
+          <div class="weekday">Thứ 5</div>
+          <div class="weekday">Thứ 6</div>
+          <div class="weekday weekend">Thứ 7</div>
+          <div class="weekday weekend sunday">Chủ Nhật</div>
+        </div>
+
+        <!-- Month Grid Cells -->
+        <div class="calendar-grid" id="calendarGrid">
+          <!-- Populated dynamically by app.js -->
+        </div>
+      </section>
+
+
+      <!-- RIGHT SECTION: UPCOMING NOTES & FILTERS -->
+      <section class="panel right-panel" id="listView">
+        <div class="panel-header">
+          <div class="panel-title">
+            <div class="panel-icon-badge">
+              <i class="fa-solid fa-clipboard-list"></i>
+            </div>
+            <div>
+              <h2>Lịch Hẹn & Ghi Chú</h2>
+            </div>
+          </div>
+          <span class="notes-total" id="notesTotalCount">0 lịch hẹn</span>
+        </div>
+
+        <!-- Search bar on top -->
+        <div class="search-bar-wrap">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="searchInput" placeholder="Tìm kiếm nội dung, giờ hẹn...">
+          <button id="btnClearSearch" class="btn-clear" style="display:none;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="filters-container">
+          <!-- Time Range Quick Pills -->
+          <div class="filter-group">
+            <div class="filter-header-row">
+              <span class="filter-label"><i class="fa-regular fa-clock"></i> Thời gian:</span>
+            </div>
+            <div class="filter-pills" id="timeFilterPills">
+              <button class="pill active" data-filter="all">Tất cả</button>
+              <button class="pill" data-filter="week1">1 tuần tới</button>
+              <button class="pill" data-filter="week2">2 tuần tới</button>
+              <button class="pill" data-filter="week3">3 tuần tới</button>
+              <button class="pill" data-filter="week4">4 tuần tới</button>
+            </div>
+          </div>
+
+          <!-- Multi-Month Selector Filter (Compact single row) -->
+          <div class="filter-group">
+            <div class="filter-subrow">
+              <span class="filter-label"><i class="fa-regular fa-calendar"></i> Tháng (<span id="selectedYearDisplay">2026</span>):</span>
+              <button class="btn-link" id="btnClearMonthFilter">Chọn tất cả</button>
+            </div>
+            <div class="month-pills-grid" id="monthFilterPills">
+              <!-- Render 12 months buttons -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Notes Scrollable List -->
+        <div class="notes-list" id="notesListContainer">
+          <!-- Notes items rendered here -->
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Floating Action Button for Mobile -->
+    <button class="fab-btn" id="fabAddNote" title="Thêm ghi chú mới">
+      <i class="fa-solid fa-plus"></i>
+    </button>
+
+  </div>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- 1. Note Add / Edit Modal -->
+  <div class="modal-overlay" id="noteModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <i class="fa-solid fa-calendar-plus modal-icon"></i>
+          <h3 id="noteModalTitle">Thêm Lịch Hẹn</h3>
+        </div>
+        <button class="btn-close" id="btnCloseNoteModal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="noteForm" class="modal-body modal-compact-body">
+        <input type="hidden" id="noteId">
+
+        <!-- Row 1: Ngày & Giờ hẹn (2 cột song song) -->
+        <div class="form-row-2col">
+          <!-- Cột 1: Ngày lên lịch -->
+          <div class="form-group">
+            <label for="noteDate"><i class="fa-regular fa-calendar text-primary"></i> Ngày <span class="required">*</span></label>
+            <div class="input-date-compact">
+              <input type="date" id="noteDate" required class="form-control form-control-sm">
+              <span class="lunar-pill-badge" id="noteDateLunarPreview">ÂL: --/--</span>
+            </div>
+          </div>
+
+          <!-- Cột 2: Giờ hẹn chuẩn 24h -->
+          <div class="form-group">
+            <label><i class="fa-regular fa-clock text-accent"></i> Giờ hẹn (hh:MM)</label>
+            <div class="time-24h-picker-compact">
+              <input type="text" id="noteTimeHour" maxlength="2" inputmode="numeric" class="time-box-input-sm" placeholder="00" title="Giờ (00-23)">
+              <span class="time-colon">:</span>
+              <input type="text" id="noteTimeMinute" maxlength="2" inputmode="numeric" class="time-box-input-sm" placeholder="00" title="Phút (00-59)">
+              <button type="button" class="btn-clear-time" id="btnClearTime" title="Xóa giờ">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+            <input type="hidden" id="noteTime">
+          </div>
+        </div>
+
+        <!-- Row 2: Thể loại & Công tắc Báo thức (Đưa lên trên Nội dung) -->
+        <div class="form-row-2col align-center">
+          <!-- Cột 1: Thể loại -->
+          <div class="form-group">
+            <label for="noteCategory"><i class="fa-solid fa-tag text-muted"></i> Thể loại</label>
+            <select id="noteCategory" class="form-control form-control-sm">
+              <option value="work">💼 Công việc</option>
+              <option value="personal">👤 Cá nhân</option>
+              <option value="meeting">👥 Cuộc họp</option>
+              <option value="birthday">🎂 Sinh nhật</option>
+              <option value="urgent">🚨 Khẩn cấp</option>
+            </select>
+          </div>
+
+          <!-- Cột 2: Nút gạt Báo thức Có / Không -->
+          <div class="form-group">
+            <label><i class="fa-solid fa-bell text-accent-gold"></i> Báo thức</label>
+            <div class="alarm-switch-compact" id="alarmToggleContainer">
+              <span class="switch-status-text" id="alarmStatusLabel">Không</span>
+              <label class="switch-toggle" for="alarmToggle">
+                <input type="checkbox" id="alarmToggle">
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 3: Tùy chọn Nhạc chuông & Rung (Chỉ hiện khi gạt Báo thức thành 'Có') -->
+        <div class="alarm-sub-options-compact" id="alarmSubOptions" style="display: none;">
+          <div class="alarm-opts-row">
+            <!-- Rung -->
+            <label class="custom-checkbox custom-checkbox-sm">
+              <input type="checkbox" id="alarmVibrate" checked>
+              <span class="checkmark"></span>
+              <span class="checkbox-label"><i class="fa-solid fa-mobile-screen-button"></i> Rung</span>
+            </label>
+
+            <!-- Nhạc chuông & Nghe thử & Nạp từ máy -->
+            <div class="ringtone-inline-wrap">
+              <select id="alarmRingtone" class="form-control form-control-sm">
+                <optgroup label="🔔 Chuông Hệ Thống">
+                  <option value="digital_alarm">⏰ Kỹ Thuật Số (Digital)</option>
+                  <option value="gentle_chime">🔔 Chuông Ngân (Gentle)</option>
+                  <option value="marimba_happy">🎵 Vui Vẻ (Marimba)</option>
+                  <option value="urgent_siren">🚨 Khẩn Cấp (Siren)</option>
+                  <option value="zen_harp">🪕 Chuông Thiền (Zen)</option>
+                  <option value="crystal_drop">💧 Giọt Nước (Drop)</option>
+                </optgroup>
+                <optgroup label="📁 Chuông Từ Thiết Bị (Offline)" id="customRingtoneOptGroup">
+                </optgroup>
+              </select>
+              <button type="button" id="btnPreviewSound" class="btn-icon btn-sound-test-sm" title="Nghe thử âm thanh">
+                <i class="fa-solid fa-play"></i>
+              </button>
+              <button type="button" id="btnUploadCustomSound" class="btn-icon btn-sound-add-sm" title="Chọn file nhạc từ máy (Laptop, Android, iPhone)">
+                <i class="fa-solid fa-folder-plus"></i>
+              </button>
+              <button type="button" id="btnManageCustomSounds" class="btn-icon btn-sound-manage-sm" title="Quản lý kho âm thanh offline">
+                <i class="fa-solid fa-music"></i>
+              </button>
+              <input type="file" id="inputCustomRingtone" accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac" style="display: none;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 4: Nội dung ghi chú (Không bắt buộc) -->
+        <div class="form-group">
+          <label for="noteContent"><i class="fa-regular fa-file-lines text-muted"></i> Nội dung</label>
+          <textarea id="noteContent" rows="3" class="form-control form-textarea-compact" placeholder="Nhập chi tiết lịch hẹn, ghi chú (tùy chọn)..."></textarea>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div class="modal-footer modal-footer-compact">
+          <button type="button" class="btn-danger-sm" id="btnDeleteNote" style="display: none;">
+            <i class="fa-solid fa-trash-can"></i> Xóa
+          </button>
+          <div class="right-buttons">
+            <button type="button" class="btn-secondary-sm" id="btnCancelNote">Hủy</button>
+            <button type="submit" class="btn-primary-sm" id="btnSaveNote">
+              <i class="fa-solid fa-check"></i> Lưu lịch
+            </button>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+
+  <!-- 2. Full Note Detail View Modal -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal-dialog modal-detail">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="category-badge" id="detailCategoryBadge">Công việc</span>
+          <h3 id="detailHeaderDate">Chi tiết lịch hẹn</h3>
+        </div>
+        <button class="btn-close" id="btnCloseDetailModal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-body detail-content">
+        <!-- Date & Time Highlights -->
+        <div class="detail-time-card">
+          <div class="time-item">
+            <span class="label"><i class="fa-regular fa-calendar"></i> Dương lịch:</span>
+            <strong id="detailSolarDate">--/--/----</strong>
+          </div>
+          <div class="time-item">
+            <span class="label"><i class="fa-solid fa-moon"></i> Âm lịch:</span>
+            <strong id="detailLunarDate">--/--/----</strong>
+          </div>
+          <div class="time-item" id="detailTimeRow">
+            <span class="label"><i class="fa-regular fa-clock"></i> Giờ hẹn:</span>
+            <strong id="detailTime" class="text-accent">--:--</strong>
+          </div>
+        </div>
+
+        <!-- Alarm Status Info -->
+        <div class="detail-alarm-badge" id="detailAlarmBox">
+          <!-- Injected via JS -->
+        </div>
+
+        <!-- Full Note Text -->
+        <div class="detail-body-text">
+          <label class="text-muted"><i class="fa-regular fa-file-lines"></i> Nội dung chi tiết:</label>
+          <div class="content-box" id="detailContentText"></div>
+        </div>
+
+        <!-- Created At & Sync info -->
+        <div class="detail-meta">
+          <small id="detailMetaText">Tạo lúc: --</small>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-danger" id="btnDetailDelete">
+          <i class="fa-solid fa-trash-can"></i> Xóa
+        </button>
+        <div class="right-buttons">
+          <button class="btn-secondary" id="btnDetailClose">Đóng</button>
+          <button class="btn-primary" id="btnDetailEdit">
+            <i class="fa-solid fa-pen-to-square"></i> Sửa lịch
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 3. Authentication Modal (Login / Register) -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-dialog modal-auth">
+      <div class="auth-card">
+        <!-- Close Button -->
+        <button type="button" class="btn-close-auth" id="btnCloseAuthModal" title="Đóng cửa sổ">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <!-- Brand Header -->
+        <div class="auth-header">
+          <div class="logo-icon-lg">
+            <i class="fa-solid fa-calendar-check"></i>
+          </div>
+          <h2>NOTES</h2>
+          <p>Lịch Làm Việc – Báo Thức & Đồng Bộ</p>
+        </div>
+
+        <!-- Auth Tabs (Segmented Pill Switcher) -->
+        <div class="auth-tabs" role="tablist">
+          <button type="button" class="auth-tab-btn active" id="tabLoginBtn">
+            <i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập
+          </button>
+          <button type="button" class="auth-tab-btn" id="tabRegisterBtn">
+            <i class="fa-solid fa-user-plus"></i> Đăng Ký
+          </button>
+        </div>
+
+        <!-- Alert banner in auth -->
+        <div class="auth-alert" id="authAlert" style="display: none;"></div>
+
+        <!-- Form: Login -->
+        <form id="loginForm" class="auth-form">
+          <div class="auth-field">
+            <label for="loginUsername">
+              <i class="fa-solid fa-user-circle"></i> Tên đăng nhập
+            </label>
+            <div class="auth-input-wrapper">
+              <i class="fa-solid fa-user input-icon"></i>
+              <input type="text" id="loginUsername" class="form-control auth-input" required placeholder="Nhập tên đăng nhập (ví dụ: bsta)" autocomplete="username">
+            </div>
+          </div>
+          
+          <div class="auth-field">
+            <label for="loginPassword">
+              <i class="fa-solid fa-lock"></i> Mật khẩu
+            </label>
+            <div class="auth-input-wrapper password-input-wrap">
+              <i class="fa-solid fa-key input-icon"></i>
+              <input type="password" id="loginPassword" class="form-control auth-input" required placeholder="Nhập mật khẩu của bạn" autocomplete="current-password">
+              <button type="button" class="btn-eye" data-target="loginPassword" title="Hiện/ẩn mật khẩu">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="admin-quick-hint" id="quickAdminFill" title="Bấm để tự động điền thông tin đăng nhập Admin">
+            <div class="hint-badge"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="hint-body">
+              <span class="hint-label">Tài khoản Admin mặc định:</span>
+              <span class="hint-values"><code>bsta</code> / <code>thanhta92</code> <span class="hint-action">(Bấm điền nhanh)</span></span>
+            </div>
+          </div>
+
+          <button type="submit" class="auth-btn-submit" id="btnLoginSubmit">
+            <i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập
+          </button>
+        </form>
+
+        <!-- Form: Register -->
+        <form id="registerForm" class="auth-form" style="display: none;">
+          <div class="auth-field">
+            <label for="regFullName">
+              <i class="fa-solid fa-id-card"></i> Họ và Tên
+            </label>
+            <div class="auth-input-wrapper">
+              <i class="fa-solid fa-id-card input-icon"></i>
+              <input type="text" id="regFullName" class="form-control auth-input" required placeholder="Ví dụ: Nguyễn Văn A">
+            </div>
+          </div>
+
+          <div class="auth-field">
+            <label for="regUsername">
+              <i class="fa-solid fa-user"></i> Tên đăng nhập mong muốn
+            </label>
+            <div class="auth-input-wrapper">
+              <i class="fa-solid fa-at input-icon"></i>
+              <input type="text" id="regUsername" class="form-control auth-input" required placeholder="Ví dụ: nguyenvana" autocomplete="username">
+            </div>
+          </div>
+
+          <div class="auth-field">
+            <label for="regPassword">
+              <i class="fa-solid fa-lock"></i> Mật khẩu
+            </label>
+            <div class="auth-input-wrapper password-input-wrap">
+              <i class="fa-solid fa-key input-icon"></i>
+              <input type="password" id="regPassword" class="form-control auth-input" required placeholder="Tối thiểu 6 ký tự" autocomplete="new-password">
+              <button type="button" class="btn-eye" data-target="regPassword" title="Hiện/ẩn mật khẩu">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="auth-field">
+            <label for="regConfirmPassword">
+              <i class="fa-solid fa-shield-halved"></i> Xác nhận mật khẩu
+            </label>
+            <div class="auth-input-wrapper password-input-wrap">
+              <i class="fa-solid fa-lock-open input-icon"></i>
+              <input type="password" id="regConfirmPassword" class="form-control auth-input" required placeholder="Nhập lại mật khẩu">
+              <button type="button" class="btn-eye" data-target="regConfirmPassword" title="Hiện/ẩn mật khẩu">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="register-policy-hint">
+            <div class="policy-icon"><i class="fa-solid fa-circle-info"></i></div>
+            <div class="policy-text">Lưu ý: Sau khi đăng ký, tài khoản cần được <b>Admin</b> phê duyệt trước khi đăng nhập.</div>
+          </div>
+
+          <button type="submit" class="auth-btn-submit register" id="btnRegisterSubmit">
+            <i class="fa-solid fa-user-plus"></i> Gửi Yêu Cầu Đăng Ký
+          </button>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 4. Admin User Management Modal -->
+  <div class="modal-overlay" id="adminModal">
+    <div class="modal-dialog modal-admin">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <i class="fa-solid fa-users-gear modal-icon"></i>
+          <div>
+            <h3>Quản Trị Người Dùng</h3>
+            <small class="text-muted">Phê duyệt đăng ký và quản lý người dùng ứng dụng</small>
+          </div>
+        </div>
+        <button class="btn-close" id="btnCloseAdminModal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="admin-stats-row">
+          <div class="stat-card">
+            <span class="num" id="adminTotalUsers">0</span>
+            <span class="lbl">Tổng người dùng</span>
+          </div>
+          <div class="stat-card pending">
+            <span class="num" id="adminPendingUsers">0</span>
+            <span class="lbl">Chờ phê duyệt</span>
+          </div>
+          <div class="stat-card active">
+            <span class="num" id="adminActiveUsers">0</span>
+            <span class="lbl">Đã duyệt hoạt động</span>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Họ & Tên</th>
+                <th>Username</th>
+                <th>Ngày ĐK</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="adminUsersTableBody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btnCloseAdminModal2">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 5. Firebase Cloud Settings Modal -->
+  <div class="modal-overlay" id="firebaseConfigModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <i class="fa-solid fa-cloud modal-icon"></i>
+          <h3>Cấu Hình Firebase Realtime</h3>
+        </div>
+        <button class="btn-close" id="btnCloseFirebaseModal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <p class="config-desc">
+          Ứng dụng hiện đang lưu trữ tự động và đồng bộ tức thời. Bạn có thể kết nối với Firebase Project của mình hoặc sử dụng chế độ Cloud Sync tích hợp sẵn.
+        </p>
+
+        <div class="form-group">
+          <label for="firebaseApiKey">API Key</label>
+          <input type="text" id="firebaseApiKey" class="form-control" placeholder="AIzaSy...">
+        </div>
+        <div class="form-group">
+          <label for="firebaseProjectId">Project ID</label>
+          <input type="text" id="firebaseProjectId" class="form-control" placeholder="notes-app-xxxx">
+        </div>
+        <div class="form-group">
+          <label for="firebaseDbUrl">Database URL / Firestore</label>
+          <input type="text" id="firebaseDbUrl" class="form-control" placeholder="https://notes-app-default-rtdb.firebaseio.com">
+        </div>
+
+        <div class="alert alert-info">
+          <i class="fa-solid fa-lightbulb"></i> <b>Lưu ý:</b> Dù ở thiết bị nào, hệ thống đều tự động phân tách dữ liệu riêng theo từng tài khoản User độc lập.
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btnResetDefaultFirebase">Mặc Định</button>
+        <button class="btn-primary" id="btnSaveFirebaseConfig">Lưu Cấu Hình</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 6. Alarm Ringing Glassmorphism Screen (Full Screen Wake Up) -->
+  <div class="alarm-ringing-overlay" id="alarmRingingOverlay" style="display: none;">
+    <div class="alarm-ring-card">
+      <div class="alarm-bell-animation">
+        <i class="fa-solid fa-bell"></i>
+      </div>
+      <h2 class="alarm-ring-title">ĐẾN GIỜ HẸN!</h2>
+      <div class="alarm-ring-time" id="ringTimeDisplay">14:30</div>
+      
+      <div class="alarm-ring-box">
+        <div class="alarm-ring-date" id="ringDateDisplay">Thứ Sáu, 02/10/2026 (Âm lịch: 22/8)</div>
+        <div class="alarm-ring-note" id="ringNoteContent">Nội dung cuộc hẹn sẽ hiển thị ở đây...</div>
+      </div>
+
+      <div class="alarm-ring-actions">
+        <button class="btn-alarm-snooze" id="btnAlarmSnooze">
+          <i class="fa-solid fa-clock-rotate-left"></i> Báo lại sau 5 phút
+        </button>
+        <button class="btn-alarm-dismiss" id="btnAlarmDismiss">
+          <i class="fa-solid fa-bell-slash"></i> Tắt Báo Thức
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Kho Âm Thanh Thiết Bị (Offline Ringtones Modal) -->
+  <div class="modal-overlay" id="customSoundModal">
+    <div class="modal-dialog modal-custom-sound">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <i class="fa-solid fa-music modal-icon text-accent"></i>
+          <div>
+            <h3>Kho Âm Thanh Thiết Bị (Offline)</h3>
+            <small class="text-muted">Chọn file nhạc từ máy tính, Android hoặc iPhone để làm chuông</small>
+          </div>
+        </div>
+        <button class="btn-close" id="btnCloseSoundModal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Upload Dropzone / Picker -->
+        <div class="sound-upload-card" id="soundUploadDropzone">
+          <input type="file" id="inputModalCustomSound" accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac" style="display: none;">
+          <div class="upload-icon-box">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+          </div>
+          <h4>Tải file âm thanh từ máy</h4>
+          <p>Hỗ trợ <b>MP3, WAV, M4A, AAC, OGG</b> (Tối đa 15MB)</p>
+          <button type="button" class="btn-primary-sm btn-choose-file" id="btnTriggerSoundPicker">
+            <i class="fa-solid fa-folder-open"></i> Chọn tệp từ thiết bị
+          </button>
+        </div>
+
+        <!-- Quick tips for devices -->
+        <div class="sound-device-tips">
+          <div class="device-tip-item">
+            <i class="fa-solid fa-laptop"></i>
+            <span><b>Laptop / PC:</b> Chọn file nhạc từ ổ đĩa máy tính.</span>
+          </div>
+          <div class="device-tip-item">
+            <i class="fa-brands fa-android text-accent-green"></i>
+            <span><b>Android:</b> Chọn từ ứng dụng Quản lý Tệp / Âm thanh.</span>
+          </div>
+          <div class="device-tip-item">
+            <i class="fa-brands fa-apple"></i>
+            <span><b>iPhone:</b> Chọn file từ ứng dụng Tệp (Files) / iCloud.</span>
+          </div>
+        </div>
+
+        <!-- Sound list header & count -->
+        <div class="sound-list-header">
+          <span class="title">Âm thanh đã lưu trên máy (<span id="customSoundCount">0</span>)</span>
+          <small class="text-muted">Lưu cục bộ IndexedDB an toàn</small>
+        </div>
+
+        <!-- Sounds list -->
+        <div class="custom-sounds-list" id="customSoundsListContainer">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <!-- Empty state -->
+        <div class="sound-empty-state" id="soundEmptyState">
+          <i class="fa-solid fa-headphones-simple"></i>
+          <p>Chưa có âm thanh tải lên nào</p>
+          <small>Hãy bấm nút bên trên để chọn bài hát hoặc tiếng chuông yêu thích từ máy bạn!</small>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btnCloseSoundModal2">Đóng</button>
+      </div>
+    </div>
+  </div>
+  <!-- 7. PWA Install & Wake Lock Instructions Modal -->
+  <div class="modal-overlay" id="pwaInstallModal">
+    <div class="modal-dialog modal-pwa">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <i class="fa-solid fa-mobile-screen-button modal-icon text-accent"></i>
+          <div>
+            <h3>Cài Đặt App & Đánh Thức Màn Hình Khóa</h3>
+            <small class="text-muted">Cấu hình chế độ PWA hoạt động độc lập như Native App</small>
+          </div>
+        </div>
+        <button class="btn-close" id="btnClosePwaModal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="pwa-guide-card">
+          <div class="pwa-guide-step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <strong>Cài đặt vào màn hình chính (PWA Standalone)</strong>
+              <p>• <b>Trên Android / Chrome:</b> Bấm nút <b>"Cài Đặt App"</b> phía trên hoặc menu 3 chấm (⋮) ➔ <b>Cài đặt ứng dụng</b>.</p>
+              <p>• <b>Trên iPhone / Safari:</b> Bấm nút Chia sẻ <i class="fa-solid fa-arrow-up-from-bracket text-accent"></i> ➔ Chọn <b>"Thêm vào MH chính" (Add to Home Screen)</b>.</p>
+            </div>
+          </div>
+
+          <div class="pwa-guide-step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <strong>Cấp quyền Thông báo & Chạy Nền (Service Worker)</strong>
+              <p>Bấm nút chuông 🔔 trên thanh tiêu đề để cấp quyền thông báo đẩy khẩn cấp <code>requireInteraction</code> giúp thiết bị reo chuông ngay cả khi đang khóa màn hình.</p>
+            </div>
+          </div>
+
+          <div class="pwa-guide-step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <strong>Chế độ Giữ Đánh Thức Màn Hình (Wake Lock API)</strong>
+              <p>Nút biểu tượng tia sét <i class="fa-solid fa-bolt text-accent-gold"></i> giúp ngăn điện thoại tắt màn hình trong các phiên làm việc quan trọng.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-primary btn-block" id="btnConfirmPwaInstall">
+          <i class="fa-solid fa-check"></i> Đã Hiểu & Kích Hoạt Ngay
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. Web Push & Apple APNs Modal -->
+  <div class="modal-overlay" id="webPushModal">
+    <div class="modal-dialog modal-push">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <i class="fa-solid fa-tower-broadcast modal-icon text-accent"></i>
+          <div>
+            <h3>Báo Thức Đám Mây (Apple APNs)</h3>
+            <small class="text-muted">Đánh thức reo chuông khi khóa màn hình & tắt ứng dụng</small>
+          </div>
+        </div>
+        <button class="btn-close" id="btnCloseWebPushModal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Status Card -->
+        <div class="push-status-card" id="pushStatusCard">
+          <div class="push-status-left">
+            <div class="status-circle-pulse" id="pushStatusDot"></div>
+            <div>
+              <strong id="pushStatusTitle">Đang kiểm tra kết nối...</strong>
+              <p id="pushStatusDesc">Đang tải trạng thái Apple Push (APNs)</p>
+            </div>
+          </div>
+          <button type="button" class="btn-primary-sm" id="btnTogglePushSub">
+            <i class="fa-solid fa-bell"></i> Bật Đẩy iPhone
+          </button>
+        </div>
+
+        <!-- Server URL Setting -->
+        <div class="form-group" style="margin-top: 10px;">
+          <label><i class="fa-solid fa-server text-accent"></i> Địa chỉ Push Server (Cloud hoặc Local)</label>
+          <div class="server-input-group">
+            <input type="text" id="pushServerUrl" class="form-control form-control-sm" placeholder="Ví dụ: https://my-notes.onrender.com hoặc http://localhost:3000">
+            <button type="button" class="btn-secondary-sm" id="btnSavePushServer">Lưu</button>
+          </div>
+          <small class="text-muted">Nếu deploy cùng ứng dụng, để trống để tự động dùng Same-origin.</small>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="push-actions-grid">
+          <button type="button" class="btn-push-action" id="btnTestPushNow">
+            <i class="fa-solid fa-paper-plane text-accent"></i>
+            <span>Gửi thử thông báo màn hình khóa</span>
+          </button>
+          <button type="button" class="btn-push-action" id="btnSyncAlarmsNow">
+            <i class="fa-solid fa-rotate text-success"></i>
+            <span>Đồng bộ lịch hẹn lên Server</span>
+          </button>
+        </div>
+
+        <!-- Quick Guide for iOS -->
+        <div class="ios-push-guide">
+          <div class="guide-header">
+            <i class="fa-brands fa-apple"></i>
+            <strong>Quy trình hoạt động trên iPhone (iOS 16.4+):</strong>
+          </div>
+          <ol>
+            <li><b>Bước 1:</b> Mở Safari ➔ Bấm nút <b>Chia sẻ</b> ➔ <b>"Thêm vào Màn hình chính"</b>.</li>
+            <li><b>Bước 2:</b> Mở ứng dụng từ Màn hình chính ➔ Bấm <b>"Bật Đẩy iPhone"</b> ➔ Chọn <b>Cho phép (Allow)</b>.</li>
+            <li><b>Bước 3:</b> Đến giờ hẹn, máy chủ gửi lệnh đẩy <b>Apple APNs</b> làm iPhone tự động sáng màn hình, rung và đổ chuông báo!</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary-sm" id="btnCloseWebPushModal2">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Firebase Scripts (v9 Compat for clean offline/online operation) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  
+  <!-- Main Application Script -->
+  <script src="app.js"></script>
+</body>
+</html>
