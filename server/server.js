@@ -232,16 +232,23 @@ app.post('/api/test-push', async (req, res) => {
 
 // 5. Tiến trình tự động kiểm tra giờ hẹn và đẩy thông báo (Background Dispatcher Loop)
 function getVietnamTimeNow() {
-  const d = new Date();
-  // Lấy giờ Việt Nam (UTC+7)
-  const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
-  const vnDate = new Date(utc + (3600000 * 7));
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).formatToParts(new Date());
 
-  const y = vnDate.getFullYear();
-  const m = String(vnDate.getMonth() + 1).padStart(2, '0');
-  const day = String(vnDate.getDate()).padStart(2, '0');
-  const hh = String(vnDate.getHours()).padStart(2, '0');
-  const mm = String(vnDate.getMinutes()).padStart(2, '0');
+  const getPart = (type) => parts.find(p => p.type === type)?.value || '';
+  const y = getPart('year');
+  const m = getPart('month');
+  const day = getPart('day');
+  let hh = getPart('hour');
+  if (hh === '24') hh = '00';
+  const mm = getPart('minute');
 
   return {
     dateStr: `${y}-${m}-${day}`,

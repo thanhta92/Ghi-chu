@@ -1678,6 +1678,8 @@ class NotesApp {
         .then((reg) => {
           this.swRegistration = reg;
           console.log('[PWA] Service Worker registered with scope:', reg.scope);
+          // Chủ động kiểm tra bản cập nhật mới trên GitHub ngay khi mở app
+          reg.update().catch(() => {});
           this.syncAlarmsToServiceWorker();
         })
         .catch((err) => {
