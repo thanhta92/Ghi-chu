@@ -120,6 +120,7 @@ function triggerAlarmNotification(note) {
     renotify: true,
     requireInteraction: true, // GIỮ THÔNG BÁO SÁNG TRÊN MÀN HÌNH KHÓA CHO ĐẾN KHI NGƯỜI DÙNG TƯƠNG TÁC
     silent: false,
+    sound: 'default',
     vibrate: [500, 200, 500, 200, 500, 200, 800, 400, 800],
     data: {
       noteId: note.id,
@@ -164,6 +165,8 @@ self.addEventListener('push', (event) => {
     tag: data.tag || 'notes_push_alarm',
     requireInteraction: true,
     renotify: true,
+    silent: false,
+    sound: 'default',
     vibrate: [600, 200, 600, 200, 600, 200, 1000],
     data: {
       noteId: data.noteId,

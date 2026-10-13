@@ -197,9 +197,18 @@ app.post('/api/test-push', async (req, res) => {
   let successCount = 0;
   let failCount = 0;
 
+  const pushOptions = {
+    TTL: 60,
+    urgency: 'high',
+    headers: {
+      'apns-priority': '10',
+      'apns-push-type': 'alert'
+    }
+  };
+
   for (const sub of targets) {
     try {
-      await webpush.sendNotification(sub, payload);
+      await webpush.sendNotification(sub, payload, pushOptions);
       successCount++;
     } catch (err) {
       console.error('[Test Push Error]:', err.statusCode || err.message);
@@ -273,11 +282,19 @@ async function checkAndDispatchAlarms() {
 
     console.log(`[Push Dispatcher] Đang gửi thông báo báo thức cho lịch ${alarm.id} (${alarm.time})...`);
 
-    // Gửi đến tất cả các thiết bị đã đăng ký
+    // Gửi đến tất cả các thiết bị đã đăng ký với độ ưu tiên cao nhất của Apple APNs
     const activeSubs = [...subscriptions];
+    const pushOptions = {
+      TTL: 120, // 2 phút
+      urgency: 'high',
+      headers: {
+        'apns-priority': '10',
+        'apns-push-type': 'alert'
+      }
+    };
     for (const sub of activeSubs) {
       try {
-        await webpush.sendNotification(sub, payload);
+        await webpush.sendNotification(sub, payload, pushOptions);
         console.log(`[Push Dispatcher] ✔ Đã gửi thành công tới thiết bị: ${sub.deviceName || sub.endpoint.slice(0, 30)}`);
       } catch (err) {
         console.error(`[Push Dispatcher] ❌ Lỗi gửi tới ${sub.endpoint.slice(0, 30)}:`, err.statusCode || err.message);

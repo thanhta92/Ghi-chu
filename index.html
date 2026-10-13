@@ -361,6 +361,12 @@
               <input type="file" id="inputCustomRingtone" accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac" style="display: none;">
             </div>
           </div>
+
+          <!-- Mẹo Báo Thức iPhone -->
+          <div class="ios-alarm-tip">
+            <div class="ios-tip-badge"><i class="fa-brands fa-apple"></i> Lưu ý báo thức trên iPhone:</div>
+            <span>Khi vuốt tắt ứng dụng, iOS sẽ dừng phát nhạc nền. Bấm nút <b>"Đồng bộ Lịch iPhone"</b> bên dưới để ứng dụng Lịch của Apple tự động đổ chuông báo thức đúng giờ 100%!</span>
+          </div>
         </div>
 
         <!-- Row 4: Nội dung ghi chú (Không bắt buộc) -->
@@ -371,9 +377,14 @@
 
         <!-- Modal Footer Actions -->
         <div class="modal-footer modal-footer-compact">
-          <button type="button" class="btn-danger-sm" id="btnDeleteNote" style="display: none;">
-            <i class="fa-solid fa-trash-can"></i> Xóa
-          </button>
+          <div class="left-buttons" style="display: flex; gap: 8px; align-items: center;">
+            <button type="button" class="btn-danger-sm" id="btnDeleteNote" style="display: none;">
+              <i class="fa-solid fa-trash-can"></i> Xóa
+            </button>
+            <button type="button" class="btn-apple-calendar-sm" id="btnSyncAppleCalendar" title="Tải file .ics để thêm vào Lịch iPhone / iPad / Mac">
+              <i class="fa-brands fa-apple"></i> Đồng bộ Lịch iPhone
+            </button>
+          </div>
           <div class="right-buttons">
             <button type="button" class="btn-secondary-sm" id="btnCancelNote">Hủy</button>
             <button type="submit" class="btn-primary-sm" id="btnSaveNote">
@@ -433,9 +444,14 @@
       </div>
 
       <div class="modal-footer">
-        <button class="btn-danger" id="btnDetailDelete">
-          <i class="fa-solid fa-trash-can"></i> Xóa
-        </button>
+        <div class="left-buttons" style="display: flex; gap: 8px; align-items: center;">
+          <button class="btn-danger" id="btnDetailDelete">
+            <i class="fa-solid fa-trash-can"></i> Xóa
+          </button>
+          <button class="btn-apple-calendar" id="btnDetailSyncApple" title="Thêm sự kiện này vào Lịch iPhone / iPad để chuông Apple báo thức chuẩn xác">
+            <i class="fa-brands fa-apple"></i> Thêm vào Lịch iPhone (.ics)
+          </button>
+        </div>
         <div class="right-buttons">
           <button class="btn-secondary" id="btnDetailClose">Đóng</button>
           <button class="btn-primary" id="btnDetailEdit">
@@ -875,12 +891,13 @@
         <div class="ios-push-guide">
           <div class="guide-header">
             <i class="fa-brands fa-apple"></i>
-            <strong>Quy trình hoạt động trên iPhone (iOS 16.4+):</strong>
+            <strong>Quy định báo thức trên iPhone (Apple Sandbox):</strong>
           </div>
           <ol>
-            <li><b>Bước 1:</b> Mở Safari ➔ Bấm nút <b>Chia sẻ</b> ➔ <b>"Thêm vào Màn hình chính"</b>.</li>
-            <li><b>Bước 2:</b> Mở ứng dụng từ Màn hình chính ➔ Bấm <b>"Bật Đẩy iPhone"</b> ➔ Chọn <b>Cho phép (Allow)</b>.</li>
-            <li><b>Bước 3:</b> Đến giờ hẹn, máy chủ gửi lệnh đẩy <b>Apple APNs</b> làm iPhone tự động sáng màn hình, rung và đổ chuông báo!</li>
+            <li><b>Tại sao tắt app không kêu nhạc chuông?</b> Khi bạn vuốt tắt app, iOS sẽ dừng hẳn Web Audio để tiết kiệm pin. Web App không được tự động phát nhạc nền khi đã tắt.</li>
+            <li><b>Cách 1 - Chuẩn 100% khi tắt app:</b> Dùng tính năng <b>"Đồng bộ Lịch iPhone (.ics)"</b> ngay trong từng ghi chú. Ứng dụng Lịch gốc của Apple sẽ chịu trách nhiệm đổ chuông báo thức đúng giờ!</li>
+            <li><b>Cách 2 - Thông báo đẩy APNs:</b> Thêm PWA ra Màn hình chính ➔ Bấm <b>"Bật Đẩy iPhone"</b>. Lưu ý: Cần gạt tắt cần Im lặng (Silent) trên máy để nghe tiếng chuông báo.</li>
+            <li><b>Cách 3 - Kêu chuông liên tục trên Web:</b> Giữ ứng dụng mở và nhấn biểu tượng <b>"Giữ Màn Hình Sáng" (Wake Lock)</b>.</li>
           </ol>
         </div>
       </div>

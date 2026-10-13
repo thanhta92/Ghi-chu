@@ -733,7 +733,84 @@ class StateManager {
 
 
 /* ====================================================================
-   4. APPLICATION CONTROLLER & UI
+   4. APPLE CALENDAR / ICAL (.ICS) EXPORT ENGINE FOR IPHONE & DESKTOP
+   ==================================================================== */
+const AppleCalendarSync = {
+  createIcsContent(note) {
+    if (!note || !note.date) return null;
+    const [y, m, d] = note.date.split('-').map(Number);
+    let startH = 9, startM = 0;
+    if (note.time) {
+      const [h, min] = note.time.split(':').map(Number);
+      startH = isNaN(h) ? 9 : h;
+      startM = isNaN(min) ? 0 : min;
+    }
+
+    const pad = (n) => String(n).padStart(2, '0');
+    const dtStart = `${y}${pad(m)}${pad(d)}T${pad(startH)}${pad(startM)}00`;
+
+    // 30 phút thời lượng mặc định
+    const endDate = new Date(y, m - 1, d, startH, startM + 30);
+    const dtEnd = `${endDate.getFullYear()}${pad(endDate.getMonth() + 1)}${pad(endDate.getDate())}T${pad(endDate.getHours())}${pad(endDate.getMinutes())}00`;
+
+    const now = new Date();
+    const dtStamp = `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}Z`;
+    const uid = `notes_${note.id || Date.now()}_${Math.random().toString(36).substring(2, 8)}@notesapp.vn`;
+
+    const summary = (note.content ? note.content.slice(0, 80).replace(/\r?\n/g, ' ') : 'Lịch hẹn từ NOTES').replace(/[,;\\]/g, '\\$&');
+    const description = (note.content || 'Lịch hẹn tạo từ ứng dụng Notes').replace(/\r?\n/g, '\\n').replace(/[,;\\]/g, '\\$&');
+
+    return [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Notes App VN//iPhone Calendar Sync//VI',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      'BEGIN:VEVENT',
+      `UID:${uid}`,
+      `DTSTAMP:${dtStamp}`,
+      `DTSTART:${dtStart}`,
+      `DTEND:${dtEnd}`,
+      `SUMMARY:⏰ ${summary}`,
+      `DESCRIPTION:${description}`,
+      'STATUS:CONFIRMED',
+      'BEGIN:VALARM',
+      'ACTION:AUDIO',
+      'TRIGGER:-PT0M',
+      'ATTACH;VALUE=URI:Chord',
+      'DESCRIPTION:Nhắc nhở báo thức',
+      'END:VALARM',
+      'BEGIN:VALARM',
+      'ACTION:DISPLAY',
+      'TRIGGER:-PT0M',
+      `DESCRIPTION:⏰ ${summary}`,
+      'END:VALARM',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n');
+  },
+
+  syncToDevice(note) {
+    const icsContent = this.createIcsContent(note);
+    if (!icsContent) return false;
+
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const filename = `bao-thuc-${note.date || 'lich'}.ics`;
+
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(link.href), 10000);
+    return true;
+  }
+};
+
+
+/* ====================================================================
+   5. APPLICATION CONTROLLER & UI
    ==================================================================== */
 class NotesApp {
   constructor() {
@@ -867,6 +944,7 @@ class NotesApp {
     this.btnCloseNoteModal = document.getElementById('btnCloseNoteModal');
     this.btnCancelNote = document.getElementById('btnCancelNote');
     this.btnDeleteNote = document.getElementById('btnDeleteNote');
+    this.btnSyncAppleCalendar = document.getElementById('btnSyncAppleCalendar');
     this.noteId = document.getElementById('noteId');
     this.noteDate = document.getElementById('noteDate');
     this.noteDateLunarPreview = document.getElementById('noteDateLunarPreview');
@@ -905,6 +983,7 @@ class NotesApp {
     this.btnDetailClose = document.getElementById('btnDetailClose');
     this.btnDetailEdit = document.getElementById('btnDetailEdit');
     this.btnDetailDelete = document.getElementById('btnDetailDelete');
+    this.btnDetailSyncApple = document.getElementById('btnDetailSyncApple');
     this.detailHeaderDate = document.getElementById('detailHeaderDate');
     this.detailCategoryBadge = document.getElementById('detailCategoryBadge');
     this.detailSolarDate = document.getElementById('detailSolarDate');
@@ -1347,6 +1426,24 @@ class NotesApp {
       }
     });
 
+    // Apple Calendar Sync (.ics) for iPhone & Devices
+    this.btnSyncAppleCalendar?.addEventListener('click', () => {
+      const date = this.noteDate?.value;
+      if (!date) {
+        alert('Vui lòng chọn ngày trước khi đồng bộ sang Lịch iPhone!');
+        return;
+      }
+      const note = {
+        id: this.noteId?.value || ('tmp_' + Date.now()),
+        date: date,
+        time: this.noteTime?.value.trim() || '09:00',
+        content: this.noteContent?.value.trim() || 'Lịch hẹn từ Notes',
+        hasAlarm: true
+      };
+      AppleCalendarSync.syncToDevice(note);
+      this.showToast('Đang tải file Lịch (.ics). Hãy chọn "Thêm vào Lịch" để chuông iPhone báo thức chuẩn 100%!', 'success');
+    });
+
     // Detail Modal Controls
     this.btnCloseDetailModal?.addEventListener('click', () => this.detailModal.classList.remove('show'));
     this.btnDetailClose?.addEventListener('click', () => this.detailModal.classList.remove('show'));
@@ -1355,6 +1452,15 @@ class NotesApp {
       const id = this.detailModal.dataset.noteId;
       this.detailModal.classList.remove('show');
       if (id) this.openNoteModal(id);
+    });
+
+    this.btnDetailSyncApple?.addEventListener('click', () => {
+      const id = this.detailModal.dataset.noteId;
+      const note = this.state.notes.find(n => n.id === id);
+      if (note) {
+        AppleCalendarSync.syncToDevice(note);
+        this.showToast('Đang tải file Lịch (.ics). Hãy chọn "Thêm vào Lịch" để chuông iPhone báo thức chuẩn 100%!', 'success');
+      }
     });
 
     this.btnDetailDelete?.addEventListener('click', () => {
@@ -1654,6 +1760,16 @@ class NotesApp {
         const note = this.state.notes.find(n => n.id === triggerId);
         if (note) {
           this.triggerAlarm(note);
+
+          // Mở khóa âm thanh nếu bị Safari chặn Autoplay
+          const unlockAudio = () => {
+            AudioEngine.init();
+            if (this.activeRingingNote) {
+              AudioEngine.startAlarmLoop(this.activeRingingNote.ringtone || 'digital_alarm');
+            }
+          };
+          window.addEventListener('click', unlockAudio, { once: true });
+          window.addEventListener('touchstart', unlockAudio, { once: true });
         }
       }, 500);
     }
